@@ -1,67 +1,159 @@
 #include <GL/glut.h>
 #include <math.h>
 
-// Deklarasi fungsi pohon
+// Declaration of tree function
 void pohon();
+void drawSun(); // Declaration of the sun drawing function
 
-// Fungsi untuk menggambar silinder
+float cameraAngleX = 0.0f;
+float cameraAngleY = 0.0f;
+float cameraDistance = 30.0f;
+
+// Function to draw a cylinder
 void drawCylinder(GLdouble radius, GLdouble height, int slices) {
     GLUquadric* quad = gluNewQuadric();
     gluCylinder(quad, radius, radius, height, slices, 3);
     gluDeleteQuadric(quad);
 }
 
-void display() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
-    
-    // Atur posisi kamera lebih jauh
-    gluLookAt(10.0f, 10.0f, 15.0f,  // Posisi kamera lebih jauh dari objek
-              0.0f, 0.0f, 0.0f,     // Titik yang dilihat kamera
-              0.0f, 1.0f, 0.0f);    // Vektor "up"
-
-    // Gambar grid kubus
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
+void drawCubes(int rows, int cols, float height, float offsetX, float offsetZ) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
             glPushMatrix();
-            glTranslatef(j * 1.5f - 1.5f, 0.0f, i * 1.5f - 1.5f);
-            glColor3f(0.5f + 0.1f * i, 0.3f + 0.1f * j, 0.7f);
+            glTranslatef(j * 1.0f + offsetX, height, i * 1.0f + offsetZ);
+            glColor3f(1.0f + 1.0f * i, 1.0f + 1.0f * j, 1.0f);
+            glutSolidCube(1.0f);
+            glColor3f(0.0f, 0.0f, 0.0f);
             glutWireCube(1.0f);
             glPopMatrix();
         }
     }
+}
 
-    // Gambar pohon
-    pohon();
+void drawGround() {
+    glPushMatrix();
+    glColor3f(0.1f, 0.6f, 0.1f);
+    glTranslatef(0.0f, -0.5f, 0.0f);
+    glScalef(200.0f, 0.25f, 800.0f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+}
+
+void drawSun() {
+    glPushMatrix();
+    glColor3f(1.0f, 1.0f, 0.0f); // Yellow color for the sun
+    glTranslatef(0.0f, 20.0f, -25.0f); // Position it above the scene
+    glutSolidSphere(6.5f, 20, 20); // Draw sun as a solid sphere
+    glPopMatrix();
+}
+
+// Fungsi untuk menggambar bola (sphere)
+void drawSphere(float x, float y, float z, float radius) {
+    glPushMatrix();
+    glTranslatef(x, y, z); // Pindahkan posisi bola
+    glutSolidSphere(radius, 20, 20); // Gambar bola padat
+    glPopMatrix();
+}
+
+// Fungsi untuk menggambar awan
+void drawCloud(float x, float y, float z)
+ {
+    glColor3f(1.0f, 1.0f, 1.0f); 
+    drawSphere(x, y, z, 0.1f); 
+    drawSphere(x + 0.1f, y, z, 0.1f); 
+    drawSphere(x - 0.1f, y, z, 0.1f); 
+    drawSphere(x, y + 0.1f, z, 0.1f); 
+}
+
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+
+    float camX = cameraDistance * sin(cameraAngleY) * cos(cameraAngleX);
+    float camY = cameraDistance * sin(cameraAngleX);
+    float camZ = cameraDistance * cos(cameraAngleY) * cos(cameraAngleX);
+    gluLookAt(camX, camY, camZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
     
+    drawGround();
+    
+    // Draw cubes
+    for (int level = 0; level < 9; level++) {
+        int size = 9 - level;
+        float height = level * 1.0f;
+        float offset = -0.5f * (size - 1);
+        drawCubes(size, size, height, offset, offset);
+    }
+
+    // Draw trees
+    pohon();
+
+    // Draw the sun
+    drawSun();
+    
+	// Draw cloud
+	drawCloud(-2.5f, 10.0f, -10.0f); // Tinggi awan diatur menjadi 10.0f
+	drawCloud(-2.4f, 10.5f, -10.0f);
+	drawCloud(-2.3f, 10.0f, -10.0f);	
+	glFlush();
     glutSwapBuffers();
 }
 
 void init() {
     glEnable(GL_DEPTH_TEST);
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glClearColor(0.5f, 0.5f, 1.0f, 0.0f); // Correct clear color
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
     glMatrixMode(GL_MODELVIEW);
-    glEnable(GL_COLOR_MATERIAL);
+}
+
+void keyboard(unsigned char key, int x, int y) {
+    switch (key) {
+        case 's':
+        case 'S':
+            cameraAngleX -= 0.05f;
+            if (cameraAngleX < -1.5f) cameraAngleX = -1.5f;
+            break;
+        case 'w':
+        case 'W':
+            cameraAngleX += 0.05f;
+            if (cameraAngleX > 1.5f) cameraAngleX = 1.5f;
+            break;
+        case 'a':
+        case 'A':
+            cameraAngleY -= 0.05f;
+            break;
+        case 'd':
+        case 'D':
+            cameraAngleY += 0.05f;
+            break;
+        case 'z': // Zoom in
+            cameraDistance -= 1.0f;
+            if (cameraDistance < 5.0f) cameraDistance = 5.0f; // Minimum distance
+            break;
+        case 'x': // Zoom out
+            cameraDistance += 1.0f;
+            break;
+    }
+    glutPostRedisplay();
 }
 
 void pohon() {
-    // Gambar batang pohon pertama (wireframe)
-    glPushMatrix();
-    glColor3d(0.803921568627451, 0.5215686274509804, 0.2470588235294118);
-    glTranslated(5.0, 0.0, 0.0);  
-    glRotated(90, -1.0, 0.0, 0.0); 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // Set wireframe mode
-    drawCylinder(0.2, 2.0, 15);
+    //gambar pohon pertama
+   glPushMatrix();
+    glColor3d(0.8, 0.5, 0.25);
+    glTranslated(20.0, 1.0, 0.0);  
+    glRotated(90, 8.0, 0.0, 0.0); 
+    drawCylinder(0.3, 8.0, 20.0);
     glPopMatrix();
 
-    // Gambar daun pohon pertama (wireframe)
+   //gambar daun pohon pertama
     glPushMatrix();
     glColor3d(0.0, 0.8, 0.0);  
-    glTranslated(5.0, 2.0, 0.0);  
-    glutWireSphere(0.8, 20, 20);  // Menggunakan glutWireSphere instead of glutSolidSphere
+    glTranslated(20.0, 2.0, -0.0);  
+    glutWireSphere(0.8, 20, 20);
     
     glTranslated(0.4, 0.2, 0.0);
     glutWireSphere(0.5, 15, 15);
@@ -73,19 +165,19 @@ void pohon() {
     glutWireSphere(0.5, 15, 15);
     glPopMatrix();
 
-    // Gambar batang pohon kedua (wireframe)
+   //gambar pohon ke dua
     glPushMatrix();
-    glColor3d(0.803921568627451, 0.5215686274509804, 0.2470588235294118);
-    glTranslated(-5.0, 1.0, 0.0);  
+    glColor3d(0.8, 0.5, 0.25);
+    glTranslated(-20.0, 1.0, 0.0);  
     glRotated(90, 1.0, 0.0, 0.0); 
-    drawCylinder(0.3, 3.0, 15);
+    drawCylinder(0.3, 8.0, 15.0);
     glPopMatrix();
 
-    // Gambar daun pohon kedua (wireframe)
+    // Draw foliage for the second tree
     glPushMatrix();
     glColor3d(0.0, 0.8, 0.0);  
-    glTranslated(-5.0, 2.0, 0.0);  
-    glutWireSphere(1.0, 21, 21);  
+    glTranslated(-20.0, 2.0, 0.0);  
+    glutWireSphere(1.0, 21, 21);
     
     glTranslated(0.5, 0.3, 0.2);
     glutWireSphere(0.8, 17, 17);
@@ -97,16 +189,17 @@ void pohon() {
     glutWireSphere(1.0, 16, 16);
     glPopMatrix();
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  // Reset ke mode fill untuk objek lain
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(800, 600);
-    glutCreateWindow("3x3 Grid of Wireframe Cubes with Spherical Tree");
+    glutCreateWindow("tb kelompok 3");
     init();
     glutDisplayFunc(display);
+    glutKeyboardFunc(keyboard);
     glutMainLoop();
     return 0;
 }
