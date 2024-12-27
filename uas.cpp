@@ -1,10 +1,18 @@
 #include <GL/glut.h>
 #include <math.h>
+#include <cstdlib> // For rand()
 
 // Declaration of tree function
 void pohon();
 void drawSun(); // Declaration of the sun drawing function
 
+// Variabel untuk jumlah pohon dan awan
+int numTrees = 7;
+int numClouds = 12;
+
+// Arrays untuk menyimpan posisi pohon dan awan
+float treePositions[100][3];  // Array untuk posisi pohon
+float cloudPositions[100][3]; // Array untuk posisi awan
 float cameraAngleX = 0.0f;
 float cameraAngleY = 0.0f;
 float cameraDistance = 30.0f;
@@ -30,7 +38,6 @@ void drawCubes(int rows, int cols, float height, float offsetX, float offsetZ)
         {
             glPushMatrix();
             glTranslatef(j * 1.0f + offsetX, height, i * 1.0f + offsetZ);
-            // glColor3f(1.0f + 1.0f * i, 1.0f + 1.0f * j, 1.0f);
             glColor3ub(243, 158, 96);
             glutSolidCube(1.0f);
             glColor3f(0.0f, 0.0f, 0.0f);
@@ -71,11 +78,66 @@ void drawSphere(float x, float y, float z, float radius)
 // Fungsi untuk menggambar awan
 void drawCloud(float x, float y, float z)
 {
-    glColor3f(1.0f, 1.0f, 1.0f);
-    drawSphere(x, y, z, 0.1f);
-    drawSphere(x + 0.1f, y, z, 0.1f);
-    drawSphere(x - 0.1f, y, z, 0.1f);
-    drawSphere(x, y + 0.1f, z, 0.1f);
+    glColor3f(1.0f, 1.0f, 1.0f); // Set cloud color to white
+    float cloudSize = 0.75f; // Increase the size of the cloud spheres
+    drawSphere(x, y, z, cloudSize);
+    drawSphere(x + cloudSize, y, z, cloudSize);
+    drawSphere(x - cloudSize, y, z, cloudSize);
+    drawSphere(x, y + cloudSize, z, cloudSize);
+}
+
+void generateTreePositions()
+{
+    for (int i = 0; i < numTrees; i++)
+    {
+        treePositions[i][0] = (rand() % 40) - 20.0f; // Random X between -20 and 20
+        treePositions[i][1] = 1.0f;                   // Ground level for the tree
+        treePositions[i][2] = (rand() % 40) - 20.0f; // Random Z between -20 and 20
+    }
+}
+
+// Fungsi untuk menghasilkan posisi acak untuk awan
+void generateCloudPositions()
+{
+    for (int i = 0; i < numClouds; i++)
+    {
+        cloudPositions[i][0] = (rand() % 40) - 20.0f; // Random X between -20 and 20
+        cloudPositions[i][1] = (rand() % 10) + 5.0f;  // Random Y between 5 and 15 (cloud height)
+        cloudPositions[i][2] = (rand() % 40) - 20.0f; // Random Z between -20 and 20
+    }
+}
+
+// Fungsi untuk menggambar pohon pada posisi yang sudah disimpan
+void generateTrees()
+{
+    for (int i = 0; i < numTrees; i++)
+    {
+        // Gunakan posisi pohon yang sudah disimpan
+        float x = treePositions[i][0];
+        float y = treePositions[i][1];
+        float z = treePositions[i][2];
+
+        // Gambar pohon pada posisi yang sudah disimpan
+        glPushMatrix();
+        glTranslatef(x, y, z);
+        pohon(); // Gambar pohon pada posisi yang sudah disimpan
+        glPopMatrix();
+    }
+}
+
+// Fungsi untuk menggambar awan pada posisi yang sudah disimpan
+void generateClouds()
+{
+    for (int i = 0; i < numClouds; i++)
+    {
+        // Gunakan posisi awan yang sudah disimpan
+        float x = cloudPositions[i][0];
+        float y = cloudPositions[i][1];
+        float z = cloudPositions[i][2];
+
+        // Gambar awan pada posisi yang sudah disimpan
+        drawCloud(x, y, z);
+    }
 }
 
 void display()
@@ -108,19 +170,20 @@ void display()
         drawCubes(size, size, height, offset, offset);
     }
 
-    // Draw trees
-    pohon();
+    // Generate trees at pre-determined positions
+    generateTrees();
 
     // Draw the sun
     drawSun();
 
-    // Draw cloud
-    drawCloud(-2.5f, 10.0f, -10.0f); // Tinggi awan diatur menjadi 10.0f
-    drawCloud(-2.4f, 10.5f, -10.0f);
-    drawCloud(-2.3f, 10.0f, -10.0f);
+    // Generate clouds at pre-determined positions
+    generateClouds();
+
     glFlush();
     glutSwapBuffers();
 }
+
+
 
 void init()
 {
@@ -175,7 +238,7 @@ void pohon()
     // gambar pohon pertama
     glPushMatrix();
     glColor3d(0.8, 0.5, 0.25);
-    glTranslated(20.0, 1.0, 0.0);
+    glTranslated(20.0, 2.0, 0.0);
     glRotated(90, 8.0, 0.0, 0.0);
     drawCylinder(0.3, 8.0, 20.0);
     glPopMatrix();
@@ -229,9 +292,19 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(800, 600);
     glutCreateWindow("tb kelompok 3");
+
+    // Tentukan jumlah pohon dan awan
+    numTrees = 7;  // Misalnya 5 pohon
+    numClouds = 12; // Misalnya 10 awan
+
+    // Generate posisi acak untuk pohon dan awan sekali
+    generateTreePositions();
+    generateCloudPositions();
+
     init();
     glutDisplayFunc(display);
     glutKeyboardFunc(keyboard);
     glutMainLoop();
     return 0;
 }
+
