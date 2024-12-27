@@ -1,5 +1,5 @@
 [Project]
-FileName=uas 70%.dev
+FileName=uas.dev
 Name=Project1
 Type=1
 Ver=2
@@ -11,7 +11,7 @@ ResourceIncludes=
 MakeIncludes=
 Compiler=
 CppCompiler=
-Linker=-lopengl32_@@_-lfreeglut_@@_-lglu32_@@_
+Linker=-lopengl32_@@_-lglu32_@@_-lfreeglut_@@__@@_
 IsCpp=1
 Icon=
 ExeOutput=
@@ -19,7 +19,7 @@ ObjectOutput=
 LogOutput=
 LogOutputEnabled=0
 OverrideOutput=0
-OverrideOutputName=uas 70%.exe
+OverrideOutputName=uas.exe
 HostApplication=
 UseCustomMakefile=0
 CustomMakefile=
@@ -51,7 +51,7 @@ AutoIncBuildNr=0
 SyncProduct=1
 
 [Unit1]
-FileName=uas 70%.cpp
+FileName=uas.cpp
 CompileCpp=1
 Folder=
 Compile=1
