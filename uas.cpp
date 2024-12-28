@@ -1,10 +1,19 @@
 #include <GL/glut.h>
 #include <math.h>
-#include <cstdlib> // For rand()
+#include <cstdlib>
+#include <vector>
+using namespace std;
 
-// Declaration of tree function
+struct Position
+{
+    float x, y, z;
+};
+
 void pohon();
 void drawSun(); // Declaration of the sun drawing function
+void drawCloud(float x, float y, float z);
+// Vektor global untuk menyimpan posisi pohon
+vector<Position> treePosition;
 
 // Variabel untuk jumlah pohon dan awan
 int numTrees = 7;
@@ -21,6 +30,131 @@ GLfloat light_position[] = {0.0, 20.0, -15.0, 1.0};
 GLfloat light_ambient[] = {0.1, 0.1, 0.1, 1.0};
 GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
 GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+
+/*
+====================================================  Tree by Kiplinyu
+*/
+
+void kipDrawTree(float x, float y, float z)
+{
+    // Draw the tree trunk
+    glTranslatef(x, y, z);
+    glPushMatrix();
+    glRotated(-90, 1.0, 0.0, 0.0);
+    glColor3f(0.5f, 0.35f, 0.05f);
+    gluCylinder(gluNewQuadric(), 0.5, 0.3, 4.0, 20, 10);
+    glPopMatrix();
+
+    glPushMatrix();
+    glRotated(-20, 1.0, 0.0, 0.0);
+    glTranslatef(0, 2.0, 1.0);
+    glColor3f(0.5f, 0.35f, 0.05f);
+    gluCylinder(gluNewQuadric(), 0.2, 0.1, 0.7, 20, 10);
+    glPopMatrix();
+
+    // Draw the tree foliage
+    glPushMatrix();
+    glTranslatef(0, 4.0, 0);
+    glColor3ub(62, 123, 39);
+    glutSolidSphere(1.0, 20, 20);
+    // glColor3ub(133, 169, 71);
+    // glutWireSphere(1.01, 20, 20);
+    glPopMatrix();
+
+    glPushMatrix();
+    glColor3ub(62, 123, 39);
+    glTranslatef(0, 5.0, 0);
+    glutSolidSphere(0.9, 20, 20);
+    // glColor3ub(133, 169, 71);
+    // glutWireSphere(0.95, 20, 20);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.8, 4.3, 0);
+    glColor3ub(62, 123, 39);
+    glutSolidSphere(0.7, 20, 20);
+    // glColor3ub(133, 169, 71);
+    // glutWireSphere(0.75, 20, 20);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0, 4.3, 0.8);
+    glColor3ub(62, 123, 39);
+    glutSolidSphere(0.7, 20, 20);
+    // glColor3ub(133, 169, 71);
+    // glutWireSphere(0.75, 20, 20);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0, 4.3, -0.8);
+    glColor3ub(62, 123, 39);
+    glutSolidSphere(0.7, 20, 20);
+    // glColor3ub(133, 169, 71);
+    // glutWireSphere(0.75, 20, 20);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(-0.9, 4.3, 0);
+    glColor3ub(62, 123, 39);
+    glutSolidSphere(0.65, 20, 20);
+    // glColor3ub(133, 169, 71);
+    // glutWireSphere(0.7, 20, 20);
+    glPopMatrix();
+}
+
+void generateRandomPosition(float &x, float &y, float &z, float height)
+{
+    do
+    {
+        // Generate angka acak untuk x dan z dalam range -20 hingga 20
+        x = (rand() % 51 - 25); // -20 hingga 20
+        z = (rand() % 51 - 25);
+    } while ((x >= -12 && x <= 12) && (z >= -12 && z <= 12)); // Cek radius larangan
+
+    // Y adalah tinggi pohon (ground level)
+    y = height;
+}
+
+void genRandomTrees(int treeCount)
+{
+    // Generate posisi pohon hanya sekali
+    if (treePosition.empty())
+    {
+        for (int i = 0; i < treeCount; ++i)
+        {
+            Position pos;
+            generateRandomPosition(pos.x, pos.y, pos.z, -1.0f);
+            treePosition.push_back(pos);
+        }
+    }
+}
+
+void drawRandomTrees()
+{
+    // Gambar pohon berdasarkan posisi yang sudah di-generate
+    for (const auto &pos : treePosition)
+    {
+        glPushMatrix();
+        kipDrawTree(pos.x, pos.y, pos.z);
+        glPopMatrix();
+    }
+}
+
+void drawRandomCloudes(int cloudCount)
+{
+    for (int i = 0; i < cloudCount; ++i)
+    {
+        float x, y, z;
+        generateRandomPosition(x, y, z, 10);
+        glPushMatrix();
+        drawCloud(x, y, z); // Gambar pohon di posisi tersebut
+        glPopMatrix();
+    }
+}
+
+/*
+====================================================  End Here
+*/
 
 // Function to draw a cylinder
 void drawCylinder(GLdouble radius, GLdouble height, int slices)
@@ -79,7 +213,7 @@ void drawSphere(float x, float y, float z, float radius)
 void drawCloud(float x, float y, float z)
 {
     glColor3f(1.0f, 1.0f, 1.0f); // Set cloud color to white
-    float cloudSize = 0.75f; // Increase the size of the cloud spheres
+    float cloudSize = 0.75f;     // Increase the size of the cloud spheres
     drawSphere(x, y, z, cloudSize);
     drawSphere(x + cloudSize, y, z, cloudSize);
     drawSphere(x - cloudSize, y, z, cloudSize);
@@ -91,7 +225,7 @@ void generateTreePositions()
     for (int i = 0; i < numTrees; i++)
     {
         treePositions[i][0] = (rand() % 40) - 20.0f; // Random X between -20 and 20
-        treePositions[i][1] = 1.0f;                   // Ground level for the tree
+        treePositions[i][1] = 1.0f;                  // Ground level for the tree
         treePositions[i][2] = (rand() % 40) - 20.0f; // Random Z between -20 and 20
     }
 }
@@ -171,19 +305,20 @@ void display()
     }
 
     // Generate trees at pre-determined positions
-    generateTrees();
+    // generateTrees();
+
+    drawRandomTrees();
+    drawRandomCloudes(10);
 
     // Draw the sun
     drawSun();
 
     // Generate clouds at pre-determined positions
-    generateClouds();
+    // generateClouds();
 
     glFlush();
     glutSwapBuffers();
 }
-
-
 
 void init()
 {
@@ -294,8 +429,10 @@ int main(int argc, char **argv)
     glutCreateWindow("tb kelompok 3");
 
     // Tentukan jumlah pohon dan awan
-    numTrees = 7;  // Misalnya 5 pohon
+    numTrees = 7;   // Misalnya 5 pohon
     numClouds = 12; // Misalnya 10 awan
+
+    genRandomTrees(15);
 
     // Generate posisi acak untuk pohon dan awan sekali
     generateTreePositions();
@@ -307,4 +444,3 @@ int main(int argc, char **argv)
     glutMainLoop();
     return 0;
 }
-
