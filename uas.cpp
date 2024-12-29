@@ -16,7 +16,7 @@ void drawCloud(float x, float y, float z);
 vector<Position> treePosition;
 
 // Variabel untuk jumlah pohon dan awan
-int numTrees = 7;
+int numTrees = 50;
 int numClouds = 12;
 
 // Arrays untuk menyimpan posisi pohon dan awan
@@ -25,6 +25,7 @@ float cloudPositions[100][3]; // Array untuk posisi awan
 float cameraAngleX = 0.0f;
 float cameraAngleY = 0.0f;
 float cameraDistance = 30.0f;
+float cloudRotationAngle = 1.0f;
 
 GLfloat light_position[] = {0.0, 20.0, -15.0, 1.0};
 GLfloat light_ambient[] = {0.1, 0.1, 0.1, 1.0};
@@ -115,6 +116,18 @@ void generateRandomPosition(float &x, float &y, float &z, float height)
     y = height;
 }
 
+void drawRandomTrees()
+{
+    // Gambar pohon berdasarkan posisi yang sudah di-generate
+    for (size_t i = 0; i < treePosition.size(); ++i)
+    {
+        const Position &pos = treePosition[i];
+        glPushMatrix();
+        kipDrawTree(pos.x, pos.y, pos.z);
+        glPopMatrix();
+    }
+}
+
 void genRandomTrees(int treeCount)
 {
     // Generate posisi pohon hanya sekali
@@ -129,26 +142,33 @@ void genRandomTrees(int treeCount)
     }
 }
 
-void drawRandomTrees()
+vector<Position> cloudPosition;
+
+void drawRandomClouds()
 {
-    // Gambar pohon berdasarkan posisi yang sudah di-generate
-    for (const auto &pos : treePosition)
+    // Gambar awan berdasarkan posisi yang sudah di-generate
+    for (size_t i = 0; i < cloudPosition.size(); ++i)
     {
+        const Position &pos = cloudPosition[i];
         glPushMatrix();
-        kipDrawTree(pos.x, pos.y, pos.z);
+        glTranslatef(pos.x, pos.y, pos.z);
+        glRotatef(cloudRotationAngle, 0.0f, 1.0f, 0.0f); // Rotasi awan
+        drawCloud(0, 0, 0);
         glPopMatrix();
     }
 }
 
-void drawRandomCloudes(int cloudCount)
+void genRandomClouds(int cloudCount)
 {
-    for (int i = 0; i < cloudCount; ++i)
+    // Generate posisi awan hanya sekali
+    if (cloudPosition.empty())
     {
-        float x, y, z;
-        generateRandomPosition(x, y, z, 10);
-        glPushMatrix();
-        drawCloud(x, y, z); // Gambar pohon di posisi tersebut
-        glPopMatrix();
+        for (int i = 0; i < cloudCount; ++i)
+        {
+            Position pos;
+            generateRandomPosition(pos.x, pos.y, pos.z, 10.0f);
+            cloudPosition.push_back(pos);
+        }
     }
 }
 
@@ -235,9 +255,9 @@ void generateCloudPositions()
 {
     for (int i = 0; i < numClouds; i++)
     {
-        cloudPositions[i][0] = (rand() % 40) - 20.0f; // Random X between -20 and 20
+        cloudPositions[i][0] = (rand() % 40) - 50.0f; // Random X between -20 and 20
         cloudPositions[i][1] = (rand() % 10) + 5.0f;  // Random Y between 5 and 15 (cloud height)
-        cloudPositions[i][2] = (rand() % 40) - 20.0f; // Random Z between -20 and 20
+        cloudPositions[i][2] = (rand() % 40) - 50.0f; // Random Z between -20 and 20
     }
 }
 
@@ -308,7 +328,14 @@ void display()
     // generateTrees();
 
     drawRandomTrees();
-    drawRandomCloudes(10);
+
+
+    drawRandomClouds();
+
+
+    cloudRotationAngle += 0.05f;
+    if (cloudRotationAngle >= 360.0f)
+        cloudRotationAngle -= 360.0f;
 
     // Draw the sun
     drawSun();
@@ -318,6 +345,11 @@ void display()
 
     glFlush();
     glutSwapBuffers();
+}
+
+void idle()
+{
+    glutPostRedisplay(); // Memanggil redisplay untuk animasi
 }
 
 void init()
@@ -428,19 +460,19 @@ int main(int argc, char **argv)
     glutInitWindowSize(800, 600);
     glutCreateWindow("tb kelompok 3");
 
-    // Tentukan jumlah pohon dan awan
-    numTrees = 7;   // Misalnya 5 pohon
-    numClouds = 12; // Misalnya 10 awan
+    numTrees = 7;   // Jumlah pohon
+    numClouds = 12; // Jumlah awan
 
     genRandomTrees(15);
+    genRandomClouds(10);
 
-    // Generate posisi acak untuk pohon dan awan sekali
     generateTreePositions();
     generateCloudPositions();
 
     init();
     glutDisplayFunc(display);
     glutKeyboardFunc(keyboard);
+    glutIdleFunc(idle); // Tambahkan fungsi idle
     glutMainLoop();
     return 0;
 }
