@@ -13,7 +13,8 @@ using namespace std;
 */
 void drawSun(); 
 void drawCloud(float x, float y, float z);
-
+void drawSphere();
+void generateRandomPosition(float &x, float &y, float &z, float height);
 
 /*
 ||================================================================  Global Scobe Variabel  ============================================================||
@@ -44,68 +45,18 @@ GLfloat light_ambient[] = {0.1, 0.1, 0.1, 1.0};
 GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
 GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
 
-/*
-||================================================================  Fungsi Ground/Lantai  (Rizki)  ======================================================================||
-*/
-void drawGround()
-{
-    glPushMatrix();
-    glColor3f(0.1f, 0.6f, 0.1f);
-    glTranslatef(0.0f, -0.5f, 0.0f);
-    glScalef(200.0f, 0.25f, 800.0f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-}
 
-/*
-||================================================================  Fungsi Matahari (Rizki)  ============================================================================||
-*/
-void drawSun()
+void genRandomTrees(int treeCount)
 {
-    glPushMatrix();
-    glColor3f(1.0f, 1.0f, 0.0f);       // Yellow color for the sun
-    glTranslatef(0.0f, 20.0f, -25.0f); // Position it above the scene
-    glutSolidSphere(6.5f, 20, 20);     // Draw sun as a solid sphere
-    glPopMatrix();
-}
-
-/*
-||================================================================  Fungsi Sphere/Bahan Awan (Sulthan)  ================================================================||
-*/
-// Fungsi untuk menggambar bola (sphere)
-void drawSphere(float x, float y, float z, float radius)
-{
-    glPushMatrix();
-    glTranslatef(x, y, z);           // Pindahkan posisi bola
-    glutSolidSphere(radius, 20, 20); // Gambar bola padat
-    glPopMatrix();
-}
-
-/*
-||================================================================  Fungsi Awan (Sulthan)  =============================================================================||
-*/
-// Fungsi untuk menggambar awan
-void drawCloud(float x, float y, float z)
-{
-    glColor3f(1.0f, 1.0f, 1.0f); // Set cloud color to white
-    float cloudSize = 0.75f;     // Increase the size of the cloud spheres
-    drawSphere(x, y, z, cloudSize);
-    drawSphere(x + cloudSize, y, z, cloudSize);
-    drawSphere(x - cloudSize, y, z, cloudSize);
-    drawSphere(x, y + cloudSize, z, cloudSize);
-}
-
-void drawRandomClouds()
-{
-    // Gambar awan berdasarkan posisi yang sudah di-generate
-    for (size_t i = 0; i < cloudPosition.size(); ++i)
+    // Generate posisi pohon hanya sekali
+    if (treePosition.empty())
     {
-        const Position &pos = cloudPosition[i];
-        glPushMatrix();
-        glTranslatef(pos.x, pos.y, pos.z);
-        glRotatef(cloudRotationAngle, 0.0f, 1.0f, 0.0f); // Rotasi awan
-        drawCloud(0, 0, 0);
-        glPopMatrix();
+        for (int i = 0; i < treeCount; ++i)
+        {
+            Position pos;
+            generateRandomPosition(pos.x, pos.y, pos.z, -1.0f);
+            treePosition.push_back(pos);
+        }
     }
 }
 
@@ -123,32 +74,13 @@ void genRandomClouds(int cloudCount)
     }
 }
 
-vector<Position> cloudPosition;
 
-// Fungsi untuk menghasilkan posisi acak untuk awan
-void generateCloudPositions()
-{
-    for (int i = 0; i < numClouds; i++)
-    {
-        cloudPositions[i][0] = (rand() % 40) - 50.0f; // Random X between -20 and 20
-        cloudPositions[i][1] = (rand() % 10) + 5.0f;  // Random Y between 5 and 15 (cloud height)
-        cloudPositions[i][2] = (rand() % 40) - 50.0f; // Random Z between -20 and 20
-    }
-}
-
-// Fungsi untuk menggambar awan pada posisi yang sudah disimpan
-void generateClouds()
-{
-    for (int i = 0; i < numClouds; i++)
-    {
-        // Gunakan posisi awan yang sudah disimpan
-        float x = cloudPositions[i][0];
-        float y = cloudPositions[i][1];
-        float z = cloudPositions[i][2];
-
-        // Gambar awan pada posisi yang sudah disimpan
-        drawCloud(x, y, z);
-    }
+// Fungsi untuk menggambar bola (sphere)
+void drawSphere(float x, float y, float z, float radius){
+	glPushMatrix();
+    glTranslatef(x, y, z);           // Pindahkan posisi bola
+    glutSolidSphere(radius, 20, 20); // Gambar bola padat
+    glPopMatrix();
 }
 
 /*
@@ -162,12 +94,99 @@ void drawCylinder(GLdouble radius, GLdouble height, int slices)
     gluDeleteQuadric(quad);
 }
 
+
+// Fungsi untuk membuat posisi acak
+void generateRandomPosition(float &x, float &y, float &z, float height)
+{
+    do
+    {
+        // Generate angka acak untuk x dan z dalam range -20 hingga 20
+        x = (rand() % 51 - 25); // -20 hingga 20
+        z = (rand() % 51 - 25);
+    } while ((x >= -12 && x <= 12) && (z >= -12 && z <= 12)); // Cek radius larangan
+
+    // Y adalah tinggi pohon (ground level)
+    y = height;
+}
+
+void Siang(float x, float y, float z, float radius){
+/*
+||================================================================  Fungsi Ground/Lantai  (Rizki)  ======================================================================||
+*/
+
+    glPushMatrix();
+    glColor3f(0.1f, 0.6f, 0.1f);
+    glTranslatef(0.0f, -0.5f, 0.0f);
+    glScalef(200.0f, 0.25f, 800.0f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+
+/*
+||================================================================  Fungsi Matahari (Rizki)  ============================================================================||
+*/
+
+    glPushMatrix();
+    glColor3f(1.0f, 1.0f, 0.0f);       // Yellow color for the sun
+    glTranslatef(0.0f, 20.0f, -25.0f); // Position it above the scene
+    glutSolidSphere(6.5f, 20, 20);     // Draw sun as a solid sphere
+    glPopMatrix();
+
+
+/*
+||================================================================  Fungsi Awan (Sulthan)  =============================================================================||
+*/
+// Fungsi untuk menggambar awan
+    glColor3f(1.0f, 1.0f, 1.0f); // Set cloud color to white
+    float cloudSize = 0.75f;     // Increase the size of the cloud spheres
+    drawSphere(x, y, z, cloudSize);
+    drawSphere(x + cloudSize, y, z, cloudSize);
+    drawSphere(x - cloudSize, y, z, cloudSize);
+    drawSphere(x, y + cloudSize, z, cloudSize);
+
+
+
+    // Gambar awan berdasarkan posisi yang sudah di-generate
+    for (size_t i = 0; i < cloudPosition.size(); ++i)
+    {
+        const Position &pos = cloudPosition[i];
+        glPushMatrix();
+        glTranslatef(pos.x, pos.y, pos.z);
+        glRotatef(cloudRotationAngle, 0.0f, 1.0f, 0.0f); // Rotasi awan
+        drawCloud(0, 0, 0);
+        glPopMatrix();
+    }
+
+
+
+vector<Position> cloudPosition;
+
+// Fungsi untuk menghasilkan posisi acak untuk awan
+    for (int i = 0; i < numClouds; i++)
+    {
+        cloudPositions[i][0] = (rand() % 40) - 50.0f; // Random X between -20 and 20
+        cloudPositions[i][1] = (rand() % 10) + 5.0f;  // Random Y between 5 and 15 (cloud height)
+        cloudPositions[i][2] = (rand() % 40) - 50.0f; // Random Z between -20 and 20
+    }
+
+
+// Fungsi untuk menggambar awan pada posisi yang sudah disimpan
+    for (int i = 0; i < numClouds; i++)
+    {
+        // Gunakan posisi awan yang sudah disimpan
+        float x = cloudPositions[i][0];
+        float y = cloudPositions[i][1];
+        float z = cloudPositions[i][2];
+
+        // Gambar awan pada posisi yang sudah disimpan
+        drawCloud(x, y, z);
+    }
+
+
 /*
 ||================================================================  Fungsi Pohon (Fetra)  ==============================================================================||
 */
 // Fungsi menggambar pohon
-void kipDrawTree(float x, float y, float z)
-{
     // Draw the tree trunk
     glTranslatef(x, y, z);
     glPushMatrix();
@@ -219,26 +238,12 @@ void kipDrawTree(float x, float y, float z)
     glColor3ub(62, 123, 39);
     glutSolidSphere(0.65, 20, 20);
     glPopMatrix();
-}
 
-// Fungsi untuk membuat posisi acak
-void generateRandomPosition(float &x, float &y, float &z, float height)
-{
-    do
-    {
-        // Generate angka acak untuk x dan z dalam range -20 hingga 20
-        x = (rand() % 51 - 25); // -20 hingga 20
-        z = (rand() % 51 - 25);
-    } while ((x >= -12 && x <= 12) && (z >= -12 && z <= 12)); // Cek radius larangan
 
-    // Y adalah tinggi pohon (ground level)
-    y = height;
-}
+
 
 
 // Fungsi untuk menggambar pohon secara acak
-void drawRandomTrees()
-{
     // Gambar pohon berdasarkan posisi yang sudah di-generate
     for (size_t i = 0; i < treePosition.size(); ++i)
     {
@@ -247,36 +252,18 @@ void drawRandomTrees()
         kipDrawTree(pos.x, pos.y, pos.z);
         glPopMatrix();
     }
-}
 
 
-void genRandomTrees(int treeCount)
-{
-    // Generate posisi pohon hanya sekali
-    if (treePosition.empty())
-    {
-        for (int i = 0; i < treeCount; ++i)
-        {
-            Position pos;
-            generateRandomPosition(pos.x, pos.y, pos.z, -1.0f);
-            treePosition.push_back(pos);
-        }
-    }
-}
-
-void generateTreePositions()
-{
+//Fungsi untuk melakukan generate posisi pohon
     for (int i = 0; i < numTrees; i++)
     {
         treePositions[i][0] = (rand() % 40) - 20.0f; // Random X between -20 and 20
         treePositions[i][1] = 1.0f;                  // Ground level for the tree
         treePositions[i][2] = (rand() % 40) - 20.0f; // Random Z between -20 and 20
     }
-}
+
 
 // Fungsi untuk menggambar pohon pada posisi yang sudah disimpan
-void generateTrees()
-{
     for (int i = 0; i < numTrees; i++)
     {
         // Gunakan posisi pohon yang sudah disimpan
@@ -290,6 +277,7 @@ void generateTrees()
         kipDrawTree(float x, float y, float z); // Gambar pohon pada posisi yang sudah disimpan
         glPopMatrix();
     }
+	
 }
 
 
@@ -365,16 +353,18 @@ void display()
 
 
     // Gambar scene berdasarkan pilihan
+    // Gambar scene berdasarkan pilihan
     if (currentScene == 1)
     {
-        // Gambar semua objek di Scene 1
-        drawSun();
-
-        for (size_t i = 0; i < treePosition.size(); ++i)
-            kipDrawTree(float x, float y, float z);
-
-        for (size_t i = 0; i < cloudPosition.size(); ++i)
-            drawCloud(float x, float y, float z)
+        drawRandomTrees();
+		// Draw the sun
+    	drawSun();
+    	drawGround();
+		drawRandomClouds();
+    }
+    else if (currentScene == 2)
+    {
+        
     }
 
     cloudRotationAngle += 0.05f;
@@ -456,8 +446,6 @@ int main(int argc, char **argv)
     genRandomTrees(20);
     genRandomClouds(30);
 
-    generateTreePositions();
-    generateCloudPositions();
 
 	// Membuat menu
     glutCreateMenu(menu);
