@@ -5,6 +5,8 @@ using namespace std;
 
 void drawSun(); // Declaration of the sun drawing function
 void siang();
+
+int currentScene = 1; // Default scene
 // Variabel untuk jumlah pohon dan awan
 int numTrees = 50;
 int numClouds = 12;
@@ -26,7 +28,6 @@ GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
 ====================================================  Tree by Kiplinyu
 */
 
-void siang(){
 	void drawTree()
 {
     // Draw the tree trunk
@@ -214,11 +215,9 @@ void generateClouds()
         drawCloud(x, y, z);
     }
 }
-}
 
-void display()
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void siang(){
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
     glEnable(GL_LIGHTING);
@@ -266,13 +265,30 @@ void display()
 
     // Draw the sun
     drawSun();
-    
-    siang();
 
     // Generate clouds at pre-determined positions
 
     glFlush();
     glutSwapBuffers();
+}
+
+void display()
+{
+  	// Gambar scene berdasarkan pilihan
+    if (currentScene == 1)
+    {
+        // Gambar semua objek di Scene 1
+        siang();
+    }
+	else if (currentScene == 2)
+	{
+		glPushMatrix();
+        glColor3f(1.0f, 0.0f, 0.0f); // Warna merah untuk SolidCube
+        glTranslatef(0.0f, 0.0f, -5.0f); // Posisi SolidCube
+        glutSolidCube(2.0f); // Gambar SolidCube
+        glPopMatrix();
+	}
+
 }
 
 void idle()
@@ -328,6 +344,23 @@ void keyboard(unsigned char key, int x, int y)
     glutPostRedisplay();
 }
 
+void menu(int option)
+{
+    switch (option)
+    {
+    case 1:
+        currentScene = 1; // Pindah ke Scene 1
+        break;
+    case 2:
+        currentScene = 2; // Pindah ke Scene 2
+        break;
+    case 3:
+        exit(0); // Keluar
+    }
+    glutPostRedisplay();
+}
+
+
 int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
@@ -340,6 +373,13 @@ int main(int argc, char **argv)
 
     generateTreePositions();
     generateCloudPositions();
+    
+    // Membuat menu
+    glutCreateMenu(menu);
+    glutAddMenuEntry("Scene 1", 1);
+    glutAddMenuEntry("Scene 2", 2);
+    glutAddMenuEntry("Keluar", 3);
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
 
     init();
     glutDisplayFunc(display);
