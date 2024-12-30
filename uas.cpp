@@ -1,15 +1,27 @@
+/*
+||================================================================  Library  ==========================================================================||
+*/
+
 #include <GL/glut.h>
 #include <math.h>
 #include <cstdlib>
 using namespace std;
 
+/*
+||================================================================  Prototype Function  ===============================================================||
+*/
 void drawSun(); // Declaration of the sun drawing function
 void siang();
 
+/*
+||================================================================  Global Scobe Variabel  ============================================================||
+*/
+
 int currentScene = 1; // Default scene
 // Variabel untuk jumlah pohon dan awan
-int numTrees = 50;
+int numTrees = 100;
 int numClouds = 12;
+int numStars = 200;          // Jumlah bintang
 
 // Arrays untuk menyimpan posisi pohon dan awan
 float treePositions[100][3];  // Array untuk posisi pohon
@@ -18,6 +30,8 @@ float cameraAngleX = 0.0f;
 float cameraAngleY = 0.0f;
 float cameraDistance = 30.0f;
 float cloudRotationAngle = 1.0f;
+float starPositions[100][3]; // Maksimum 100 bintang
+float scaleFactor = 1.0f; // Variabel untuk skala objek di malam hari
 
 GLfloat light_position[] = {0.0, 20.0, -15.0, 1.0};
 GLfloat light_ambient[] = {0.1, 0.1, 0.1, 1.0};
@@ -25,9 +39,118 @@ GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
 GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
 
 /*
-====================================================  Tree by Kiplinyu
+||================================================================  Fungsi Objek Pyramid (Rizki)  ==================================================================||
+*/
+void drawCubes(int rows, int cols, float height, float offsetX, float offsetZ)
+{
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            glPushMatrix();
+            glTranslatef(j * 1.0f + offsetX, height, i * 1.0f + offsetZ);
+            glColor3ub(243, 158, 96);
+            glutSolidCube(1.0f);
+            glColor3f(0.0f, 0.0f, 0.0f);
+            glutWireCube(1.0f);
+            glPopMatrix();
+        }
+    }
+}
+
+/*
+||================================================================  Fungsi Objek Tanah/Lantai (Rizki)  ============================================================||
 */
 
+void drawGround()
+{
+    glPushMatrix();
+    glColor3f(0.1f, 0.6f, 0.1f);
+    glTranslatef(0.0f, -0.5f, 0.0f);
+    glScalef(200.0f, 0.25f, 800.0f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+}
+
+
+
+/*
+||================================================================  Fungsi Objek Bulan (Sulthan)  =================================================================||
+*/
+void drawMoon()
+{
+    glPushMatrix();
+    glColor3f(0.7f, 0.7f, 0.7f);       // white color for the moon
+    glTranslatef(0.0f, 20.0f, 25.0f); // Position it above the scene
+    glutSolidSphere(6.5f, 20, 20);     // Draw sun as a solid sphere
+    glPopMatrix();
+}
+/*
+||================================================================  Fungsi Objek Awan (Sulthan)  ==================================================================||
+*/
+// Fungsi untuk menggambar bola (sphere)
+void drawSphere(float x, float y, float z, float radius)
+{
+    glPushMatrix();
+    glTranslatef(x, y, z);           // Pindahkan posisi bola
+    glutSolidSphere(radius, 20, 20); // Gambar bola padat
+    glPopMatrix();
+}
+
+// Fungsi untuk menggambar awan
+void drawCloud(float x, float y, float z)
+{
+    glColor3f(1.0f, 1.0f, 1.0f); // Set cloud color to white
+    float cloudSize = 0.75f;     // Increase the size of the cloud spheres
+    drawSphere(x, y, z, cloudSize);
+    drawSphere(x + cloudSize, y, z, cloudSize);
+    drawSphere(x - cloudSize, y, z, cloudSize);
+    drawSphere(x, y + cloudSize, z, cloudSize);
+}
+
+// Fungsi untuk menghasilkan posisi acak untuk awan
+void generateCloudPositions()
+{
+    for (int i = 0; i < numClouds; i++)
+    {
+        cloudPositions[i][0] = (rand() % 51 - 25);   // Random X between -20 and 20
+        cloudPositions[i][1] = (rand() % 10) + 5.0f; // Random Y between 5 and 15 (cloud height)
+        cloudPositions[i][2] = (rand() % 51 - 25);   // Random Z between -20 and 20
+    }
+}
+
+// Fungsi untuk menggambar awan pada posisi yang sudah disimpan
+void generateClouds()
+{
+    for (int i = 0; i < numClouds; i++)
+    {
+        // Gunakan posisi awan yang sudah disimpan
+        float x = cloudPositions[i][0];
+        float y = cloudPositions[i][1];
+        float z = cloudPositions[i][2];
+
+        // Gambar awan pada posisi yang sudah disimpan
+        drawCloud(x, y, z);
+    }
+}
+
+
+/*
+||================================================================  Fungsi Objek Matahari (Fetra)  ==============================================================||
+*/
+void drawSun()
+{
+    glPushMatrix();
+    glColor3f(1.0f, 1.0f, 0.0f);       // Yellow color for the sun
+    glTranslatef(0.0f, 20.0f, -25.0f); // Position it above the scene
+    glutSolidSphere(6.5f, 20, 20);     // Draw sun as a solid sphere
+    glPopMatrix();
+}
+
+
+/*
+||================================================================  Fungsi Objek Pohon (Fetra)  =================================================================||
+*/
 	void drawTree()
 {
     // Draw the tree trunk
@@ -50,109 +173,37 @@ GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
     glTranslatef(0, 4.0, 0);
     glColor3ub(62, 123, 39);
     glutSolidSphere(1.0, 20, 20);
-    // glColor3ub(133, 169, 71);
-    // glutWireSphere(1.01, 20, 20);
     glPopMatrix();
 
     glPushMatrix();
     glColor3ub(62, 123, 39);
     glTranslatef(0, 5.0, 0);
     glutSolidSphere(0.9, 20, 20);
-    // glColor3ub(133, 169, 71);
-    // glutWireSphere(0.95, 20, 20);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(0.8, 4.3, 0);
     glColor3ub(62, 123, 39);
     glutSolidSphere(0.7, 20, 20);
-    // glColor3ub(133, 169, 71);
-    // glutWireSphere(0.75, 20, 20);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(0, 4.3, 0.8);
     glColor3ub(62, 123, 39);
     glutSolidSphere(0.7, 20, 20);
-    // glColor3ub(133, 169, 71);
-    // glutWireSphere(0.75, 20, 20);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(0, 4.3, -0.8);
     glColor3ub(62, 123, 39);
     glutSolidSphere(0.7, 20, 20);
-    // glColor3ub(133, 169, 71);
-    // glutWireSphere(0.75, 20, 20);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(-0.9, 4.3, 0);
     glColor3ub(62, 123, 39);
     glutSolidSphere(0.65, 20, 20);
-    // glColor3ub(133, 169, 71);
-    // glutWireSphere(0.7, 20, 20);
     glPopMatrix();
-}
-
-/*
-====================================================  End Here
-*/
-
-void drawCubes(int rows, int cols, float height, float offsetX, float offsetZ)
-{
-    for (int i = 0; i < rows; i++)
-    {
-        for (int j = 0; j < cols; j++)
-        {
-            glPushMatrix();
-            glTranslatef(j * 1.0f + offsetX, height, i * 1.0f + offsetZ);
-            glColor3ub(243, 158, 96);
-            glutSolidCube(1.0f);
-            glColor3f(0.0f, 0.0f, 0.0f);
-            glutWireCube(1.0f);
-            glPopMatrix();
-        }
-    }
-}
-
-void drawGround()
-{
-    glPushMatrix();
-    glColor3f(0.1f, 0.6f, 0.1f);
-    glTranslatef(0.0f, -0.5f, 0.0f);
-    glScalef(200.0f, 0.25f, 800.0f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-}
-
-void drawSun()
-{
-    glPushMatrix();
-    glColor3f(1.0f, 1.0f, 0.0f);       // Yellow color for the sun
-    glTranslatef(0.0f, 20.0f, -25.0f); // Position it above the scene
-    glutSolidSphere(6.5f, 20, 20);     // Draw sun as a solid sphere
-    glPopMatrix();
-}
-
-// Fungsi untuk menggambar bola (sphere)
-void drawSphere(float x, float y, float z, float radius)
-{
-    glPushMatrix();
-    glTranslatef(x, y, z);           // Pindahkan posisi bola
-    glutSolidSphere(radius, 20, 20); // Gambar bola padat
-    glPopMatrix();
-}
-
-// Fungsi untuk menggambar awan
-void drawCloud(float x, float y, float z)
-{
-    glColor3f(1.0f, 1.0f, 1.0f); // Set cloud color to white
-    float cloudSize = 0.75f;     // Increase the size of the cloud spheres
-    drawSphere(x, y, z, cloudSize);
-    drawSphere(x + cloudSize, y, z, cloudSize);
-    drawSphere(x - cloudSize, y, z, cloudSize);
-    drawSphere(x, y + cloudSize, z, cloudSize);
 }
 
 void generateTreePositions()
@@ -164,7 +215,7 @@ void generateTreePositions()
         {
             x = (rand() % 40) - 20.0f; // Random X between -20 and 20
             z = (rand() % 40) - 20.0f; // Random Z between -20 and 20
-        } while (sqrt(x * x + z * z) <= 12.0f); // Ensure the tree is outside the 12 unit radius
+        } while (sqrt(x * x + z * z) <= 14.0f); // Ensure the tree is outside the 12 unit radius
 
         treePositions[i][0] = x;
         treePositions[i][1] = -1.0f; // Ground level for the tree
@@ -172,16 +223,6 @@ void generateTreePositions()
     }
 }
 
-// Fungsi untuk menghasilkan posisi acak untuk awan
-void generateCloudPositions()
-{
-    for (int i = 0; i < numClouds; i++)
-    {
-        cloudPositions[i][0] = (rand() % 51 - 25);   // Random X between -20 and 20
-        cloudPositions[i][1] = (rand() % 10) + 5.0f; // Random Y between 5 and 15 (cloud height)
-        cloudPositions[i][2] = (rand() % 51 - 25);   // Random Z between -20 and 20
-    }
-}
 
 // Fungsi untuk menggambar pohon pada posisi yang sudah disimpan
 void generateTrees()
@@ -201,21 +242,42 @@ void generateTrees()
     }
 }
 
-// Fungsi untuk menggambar awan pada posisi yang sudah disimpan
-void generateClouds()
-{
-    for (int i = 0; i < numClouds; i++)
-    {
-        // Gunakan posisi awan yang sudah disimpan
-        float x = cloudPositions[i][0];
-        float y = cloudPositions[i][1];
-        float z = cloudPositions[i][2];
+/*
+||================================================================  Fungsi Star (Rizki)  ========================================================================||
+*/
 
-        // Gambar awan pada posisi yang sudah disimpan
-        drawCloud(x, y, z);
+void drawStars() {
+    glPushMatrix();
+    glPointSize(2.0f); // Ukuran bintang
+    glBegin(GL_POINTS);
+    glColor3f(1.0f, 1.0f, 1.0f); // Warna bintang (putih)
+
+    for (int i = 0; i < numStars; i++) {
+        glVertex3f(starPositions[i][0], starPositions[i][1], starPositions[i][2]);
+    }
+
+    glEnd();
+    glPopMatrix();
+}
+
+
+void generateStarPositions() {
+    for (int i = 0; i < numStars; i++) {
+        // X: Lebih luas (-50.0 hingga 50.0)
+        starPositions[i][0] = (rand() % 100 - 50) / 1.0f; 
+
+        // Y: Tinggi di langit (20.0 hingga 50.0)
+        starPositions[i][1] = (rand() % 30 + 10) / 1.0f;  
+
+        // Z: Lebih luas (-50.0 hingga 50.0)
+        starPositions[i][2] = (rand() % 100 - 50) / 1.0f;
     }
 }
 
+
+/*
+||================================================================  Fungsi Scene Siang (Fetra)  ==================================================================||
+*/
 void siang(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
@@ -237,7 +299,7 @@ void siang(){
     drawGround();
 
     glPushMatrix();
-    // glScaled(2, 2, 2); // optional scaling
+	glScalef(scaleFactor, scaleFactor, scaleFactor); // Terapkan skala di malam hari
 
     // Draw cubes
     for (int level = 0; level < 9; level++)
@@ -265,49 +327,83 @@ void siang(){
 
     // Draw the sun
     drawSun();
-
+	glClearColor(0.5f, 0.5f, 1.0f, 0.0f); // Correct clear color
     // Generate clouds at pre-determined positions
 
     glFlush();
     glutSwapBuffers();
 }
 
-void display()
-{
-  	// Gambar scene berdasarkan pilihan
-    if (currentScene == 1)
-    {
-        // Gambar semua objek di Scene 1
-        siang();
-    }
-	else if (currentScene == 2)
-	{
-		glPushMatrix();
-        glColor3f(1.0f, 0.0f, 0.0f); // Warna merah untuk SolidCube
-        glTranslatef(0.0f, 0.0f, -5.0f); // Posisi SolidCube
-        glutSolidCube(2.0f); // Gambar SolidCube
-        glPopMatrix();
-	}
+/*
+||================================================================  Fungsi Scene Malam (Rizki)  ==================================================================||
+*/
+void malam(){
+	GLfloat light_position[] = {0.0, 20.0, -15.0, 1.0};
+	GLfloat light_ambient[] = {0.1, 0.1, 0.1, 1.0};
+	GLfloat light_diffuse[] = {1.0, 0.7, 2.0, 0.5};
+	GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
 
-}
-
-void idle()
-{
-    glutPostRedisplay(); // Memanggil redisplay untuk animasi
-}
-
-void init()
-{
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(0.5f, 0.5f, 1.0f, 0.0f); // Correct clear color
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glMatrixMode(GL_PROJECTION);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
-    gluPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
-    glMatrixMode(GL_MODELVIEW);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_COLOR_MATERIAL);
+
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+
+    float camX = cameraDistance * sin(cameraAngleY) * cos(cameraAngleX);
+    float camY = cameraDistance * sin(cameraAngleX);
+    float camZ = cameraDistance * cos(cameraAngleY) * cos(cameraAngleX);
+    gluLookAt(camX, camY, camZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+
+    drawGround();
+
+    glPushMatrix();
+    glScalef(scaleFactor, scaleFactor, scaleFactor); // Terapkan skala di malam hari
+
+    // Draw cubes
+    for (int level = 0; level < 9; level++)
+    {
+        int size = 9 - level;
+        float height = level * 1.0f;
+        float offset = -0.5f * (size - 1);
+        drawCubes(size, size, height, offset, offset);
+    }
+    glPopMatrix();
+
+    // Generate trees at pre-determined positions
+    generateTrees();
+
+    // drawRandomTrees();
+
+    glPushMatrix();
+    glRotatef(cloudRotationAngle, 0.0f, 1.0f, 0.0f); // Rotasi awan
+    generateClouds();
+    glPopMatrix();
+
+    cloudRotationAngle += 0.05f;
+    if (cloudRotationAngle >= 360.0f)
+        cloudRotationAngle -= 360.0f;
+
+    // Draw the sun
+    drawMoon();
+	
+	glClearColor(0.1f, 0.1f, 0.3f, 0.0f); // Correct clear color
+    // Generate clouds at pre-determined positions
+	
+	drawStars();
+    
+    glFlush();
+    glutSwapBuffers();
 }
 
+/*
+||================================================================  Fungsi Keyboard (Fetra)  ============================================================================||
+*/
 void keyboard(unsigned char key, int x, int y)
 {
     switch (key)
@@ -340,9 +436,94 @@ void keyboard(unsigned char key, int x, int y)
     case 'x': // Zoom out
         cameraDistance += 1.0f;
         break;
+    case 'b': // Perbesar skala
+        scaleFactor += 0.1f;
+        if (scaleFactor > 5.0f)
+            scaleFactor = 5.0f; // Maksimum skala
+        break;
+    case 'k': // Perkecil skala
+        scaleFactor -= 0.1f;
+        if (scaleFactor < 0.1f)
+            scaleFactor = 0.1f; // Minimum skala
+        break;
     }
     glutPostRedisplay();
 }
+
+/*
+||================================================================  Fungsi Reshape (Rizki)   ============================================================================||
+*/
+
+// Reshape function to maintain aspect ratio when window is resized
+void reshape(int w, int h)
+{
+    if (h == 0) h = 1; // Avoid division by zero
+    float aspect = (float)w / (float)h;
+
+    glViewport(0, 0, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0f, aspect, 0.1f, 100.0f);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+// Function to toggle fullscreen
+void toggleFullscreen()
+{
+    static bool isFullscreen = false;
+    isFullscreen = !isFullscreen;
+
+    if (isFullscreen)
+    {
+        glutFullScreen(); // Switch to fullscreen
+    }
+    else
+    {
+        glutReshapeWindow(800, 600); // Switch back to windowed mode with default size
+        glutPositionWindow(100, 100); // Position window
+    }
+}
+
+
+/*
+||================================================================  Display (Sulthan)   ==============================================================================||
+*/
+void display()
+{
+  	// Gambar scene berdasarkan pilihan
+    if (currentScene == 1)
+    {
+        // Gambar semua objek di Scene 1
+        siang();
+    }
+	else if (currentScene == 2)
+	{
+		malam();
+	}
+
+}
+
+/*
+||================================================================  Fungsi Lainnya   ================================================================================||
+*/
+void idle()
+{
+    glutPostRedisplay(); // Memanggil redisplay untuk animasi
+}
+
+void init()
+{
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.5f, 0.5f, 1.0f, 0.0f); // Correct clear color
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+
 
 void menu(int option)
 {
@@ -368,11 +549,12 @@ int main(int argc, char **argv)
     glutInitWindowSize(800, 600);
     glutCreateWindow("tb kelompok 3");
 
-    numTrees = 12;  // Jumlah pohon
+    numTrees = 100;  // Jumlah pohon
     numClouds = 15; // Jumlah awan
 
     generateTreePositions();
     generateCloudPositions();
+    generateStarPositions(); // Tambahkan ini
     
     // Membuat menu
     glutCreateMenu(menu);
@@ -385,6 +567,9 @@ int main(int argc, char **argv)
     glutDisplayFunc(display);
     glutKeyboardFunc(keyboard);
     glutIdleFunc(idle); // Tambahkan fungsi idle
+    glutReshapeFunc(reshape); // Register reshape function
+
     glutMainLoop();
     return 0;
 }
+
