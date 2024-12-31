@@ -81,7 +81,7 @@ void drawMoon()
 {
     glPushMatrix();
     glColor3f(0.7f, 0.7f, 0.7f);       // white color for the moon
-    glTranslatef(0.0f, 20.0f, 25.0f); // Position it above the scene
+    glTranslatef(0.0f, 30.0f, 40.0f); // Position it above the scene
     glutSolidSphere(6.5f, 20, 20);     // Draw sun as a solid sphere
     glPopMatrix();
 }
@@ -142,7 +142,7 @@ void drawSun()
 {
     glPushMatrix();
     glColor3f(1.0f, 1.0f, 0.0f);       // Yellow color for the sun
-    glTranslatef(0.0f, 20.0f, -25.0f); // Position it above the scene
+    glTranslatef(0.0f, 30.0f, -40.0f); // Position it above the scene
     glutSolidSphere(6.5f, 20, 20);     // Draw sun as a solid sphere
     glPopMatrix();
 }
