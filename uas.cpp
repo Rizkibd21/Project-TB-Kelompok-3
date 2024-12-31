@@ -32,6 +32,10 @@ float cameraDistance = 30.0f;
 float cloudRotationAngle = 1.0f;
 float starPositions[100][3]; // Maksimum 100 bintang
 float scaleFactor = 1.0f; // Variabel untuk skala objek di malam hari
+float sunRotationAngle = 0.0f; // Variabel untuk sudut rotasi matahari
+float transitionTime = 0.0f; // Variabel untuk mengatur waktu transisi
+float moonRotationAngle = 0.0f; // Variabel untuk sudut rotasi bulan
+bool isDay = true; // Untuk menentukan siang atau malam
 
 GLfloat light_position[] = {0.0, 20.0, -15.0, 1.0};
 GLfloat light_ambient[] = {0.1, 0.1, 0.1, 1.0};
@@ -80,9 +84,15 @@ void drawGround()
 void drawMoon()
 {
     glPushMatrix();
-    glColor3f(0.7f, 0.7f, 0.7f);       // white color for the moon
-    glTranslatef(0.0f, 30.0f, 40.0f); // Position it above the scene
-    glutSolidSphere(6.5f, 20, 20);     // Draw sun as a solid sphere
+    
+    // Mengatur posisi bulan berdasarkan sudut rotasi
+    float moonY = 35.0f * sin(moonRotationAngle * M_PI / 180.0f); // Posisi Y bulan
+    float moonZ = 35.0f * cos(moonRotationAngle * M_PI / 180.0f); // Posisi Z bulan
+    glTranslatef(0.0f, moonY, moonZ); // Pindahkan bulan ke posisi baru
+
+    glColor3f(0.7f, 0.7f, 0.7f); // Warna putih untuk bulan
+     glScalef(0.5f, 0.5f, 0.5f);        // Perkecil ukuran matahari
+    glutSolidSphere(6.5f, 20, 20); // Gambar bulan sebagai bola padat
     glPopMatrix();
 }
 /*
@@ -141,13 +151,13 @@ void generateClouds()
 void drawSun()
 {
     glPushMatrix();
-    glColor3f(1.0f, 1.0f, 0.0f);       // Yellow color for the sun
-    glTranslatef(0.0f, 30.0f, -40.0f); // Position it above the scene
-    glutSolidSphere(6.5f, 20, 20);     // Draw sun as a solid sphere
+    glColor3f(1.0f, 1.0f, 0.0f);       // Warna kuning untuk matahari
+    glRotatef(sunRotationAngle, 1.0f, 0.0f, 0.0f); // Rotasi matahari di sumbu X
+    glTranslatef(0.0f, 30.0f, -25.0f); // Posisi di atas scene
+    glScalef(0.5f, 0.5f, 0.5f);        // Perkecil ukuran matahari
+    glutSolidSphere(6.5f, 20, 20);     // Gambar matahari sebagai bola padat
     glPopMatrix();
 }
-
-
 /*
 ||================================================================  Fungsi Objek Pohon (Fetra)  =================================================================||
 */
@@ -282,6 +292,21 @@ void siang(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
+    // Update waktu transisi
+    transitionTime += 0.01f; // Atur kecepatan transisi
+    if (transitionTime > 1.0f) transitionTime = 1.0f; // Batas maksimum
+
+    // Mengatur warna latar belakang (gradasi)
+    glClearColor(0.5f * (1 - transitionTime), 0.5f * (1 - transitionTime), 1.0f * (1 - transitionTime), 0.0f);
+
+    // Mengatur cahaya
+    GLfloat light_position[] = {0.0, 20.0 - (20.0 * transitionTime), -15.0, 1.0}; // Sesuaikan posisi cahaya
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    
+    sunRotationAngle -= -0.1f; // Kurangi sudut rotasi untuk muter ke bawah
+    if (sunRotationAngle < 1.0f) // Reset jika kurang dari 0
+        sunRotationAngle += -360.0f;
+
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     glEnable(GL_COLOR_MATERIAL);
@@ -324,6 +349,8 @@ void siang(){
     cloudRotationAngle += 0.05f;
     if (cloudRotationAngle >= 360.0f)
         cloudRotationAngle -= 360.0f;
+        
+    
 
     // Draw the sun
     drawSun();
@@ -338,7 +365,22 @@ void siang(){
 ||================================================================  Fungsi Scene Malam (Rizki)  ==================================================================||
 */
 void malam(){
-	GLfloat light_position[] = {0.0, 20.0, -15.0, 1.0};
+	 // Update sudut rotasi bulan
+    moonRotationAngle += -0.1f; // Ubah kecepatan rotasi sesuai kebutuhan
+    if (moonRotationAngle >= 360.0f) 
+		moonRotationAngle -= 360.0f;
+
+	
+    // Update waktu transisi
+    transitionTime -= 0.01f; // Atur kecepatan transisi
+    if (transitionTime < 0.0f) transitionTime = 0.0f; // Batas minimum
+
+    // Mengatur warna latar belakang (gradasi)
+    glClearColor(0.1f * transitionTime, 0.1f * transitionTime, 0.3f * transitionTime, 0.0f);
+
+    // Mengatur cahaya
+    GLfloat light_position[] = {0.0, 20.0 * transitionTime, -15.0, 1.0}; // Sesuaikan posisi cahaya
+	
 	GLfloat light_ambient[] = {0.1, 0.1, 0.1, 1.0};
 	GLfloat light_diffuse[] = {1.0, 0.7, 2.0, 0.5};
 	GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
@@ -500,6 +542,20 @@ void display()
 	{
 		malam();
 	}
+	 if (currentScene == 1) // Siang
+    {
+        siang();
+        if (isDay) {
+            drawSun(); // Gambar matahari
+        }
+    }
+    else if (currentScene == 2) // Malam
+    {
+        malam();
+        if (!isDay) {
+            drawMoon(); // Gambar bulan
+        }
+    }
 
 }
 
@@ -572,4 +628,3 @@ int main(int argc, char **argv)
     glutMainLoop();
     return 0;
 }
-
