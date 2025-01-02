@@ -19,7 +19,7 @@ void siang();
 
 int currentScene = 1; // Default scene
 // Variabel untuk jumlah pohon dan awan
-int numTrees = 100;
+int numTrees = 150;
 int numClouds = 12;
 int numStars = 200;          // Jumlah bintang
 
@@ -284,6 +284,93 @@ void generateStarPositions() {
     }
 }
 
+/*
+||================================================================  Fungsi Scene 2D (Fetra)  ==================================================================||
+*/
+void scene1() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+    
+    gluLookAt(0.0, 5.0, 30.0,  // Posisi kamera
+              0.0, 0.0, 0.0,  // Titik yang dilihat kamera
+              0.0, 1.0, 0.0); // Arah atas kamera
+
+    // Nonaktifkan pencahayaan
+    glDisable(GL_LIGHTING);
+    glDisable(GL_LIGHT0);
+
+    // Lantai
+    glPushMatrix();
+    glColor3f(0.1f, 0.6f, 0.1f);
+    glTranslatef(0.0f, -0.5f, 0.0f);
+    glScalef(200.0f, 0.25f, 800.0f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // Tambahkan pohon 2D
+    for (int i = 0; i < 10; i++) {
+        glPushMatrix();
+        glColor3f(0.5, 0.35, 0.05); // Warna batang pohon
+        glBegin(GL_QUADS);
+        glVertex3f(-1.0 + i * 5, 0.0, -30.0);
+        glVertex3f(-0.5 + i * 5, 0.0, -30.0);
+        glVertex3f(-0.5 + i * 5, 3.0, -30.0);
+        glVertex3f(-1.0 + i * 5, 3.0, -30.0);
+        glEnd();
+        glColor3f(0.0, 0.8, 0.0); // Warna daun
+        glBegin(GL_TRIANGLES);
+        glVertex3f(-1.25 + i * 5, 3.0, -30.0);
+        glVertex3f(-0.25 + i * 5, 3.0, -30.0);
+        glVertex3f(-0.75 + i * 5, 5.0, -30.0);
+        glEnd();
+        glPopMatrix();
+    }
+
+    // Tambahkan awan 2D
+    for (int i = 0; i < 5; i++) {
+        glPushMatrix();
+        glColor3f(1.0, 1.0, 1.0); // Warna awan
+        glBegin(GL_QUADS);
+        glVertex3f(-20.0 + i * 10, 15.0, -40.0);
+        glVertex3f(-15.0 + i * 10, 15.0, -40.0);
+        glVertex3f(-15.0 + i * 10, 17.0, -40.0);
+        glVertex3f(-20.0 + i * 10, 17.0, -40.0);
+        glEnd();
+        glPopMatrix();
+    }
+
+    // Piramida
+    glPushMatrix();
+    glColor3f(0.8, 0.6, 0.4);
+    glBegin(GL_TRIANGLES);
+    glVertex3f(0.0, 10.0, 0.0);   // Puncak piramida
+    glVertex3f(-10.0, 0.0, -10.0); // Basis kiri belakang
+    glVertex3f(10.0, 0.0, -10.0);  // Basis kanan belakang
+
+    glVertex3f(0.0, 10.0, 0.0);   // Puncak piramida
+    glVertex3f(10.0, 0.0, -10.0);  // Basis kanan belakang
+    glVertex3f(10.0, 0.0, 10.0);   // Basis kanan depan
+
+    glVertex3f(0.0, 10.0, 0.0);   // Puncak piramida
+    glVertex3f(10.0, 0.0, 10.0);   // Basis kanan depan
+    glVertex3f(-10.0, 0.0, 10.0);  // Basis kiri depan
+
+    glVertex3f(0.0, 10.0, 0.0);   // Puncak piramida
+    glVertex3f(-10.0, 0.0, 10.0);  // Basis kiri depan
+    glVertex3f(-10.0, 0.0, -10.0); // Basis kiri belakang
+    glEnd();
+    glPopMatrix();
+    
+    // Matahari terbenam
+    glPushMatrix();
+    glColor3f(1.0, 0.8, 0.0);
+    glTranslatef(0.0, 15.0, -30.0); // Posisikan matahari
+    glutSolidSphere(3.0, 20, 20);   // Gambar matahari
+    glPopMatrix();
+
+    glutSwapBuffers();
+}
+
 
 /*
 ||================================================================  Fungsi Scene Siang (Fetra)  ==================================================================||
@@ -536,27 +623,16 @@ void display()
     if (currentScene == 1)
     {
         // Gambar semua objek di Scene 1
-        siang();
+        scene1();
     }
 	else if (currentScene == 2)
 	{
+		siang();
+	}
+	else if (currentScene == 3)
+	{
 		malam();
 	}
-	 if (currentScene == 1) // Siang
-    {
-        siang();
-        if (isDay) {
-            drawSun(); // Gambar matahari
-        }
-    }
-    else if (currentScene == 2) // Malam
-    {
-        malam();
-        if (!isDay) {
-            drawMoon(); // Gambar bulan
-        }
-    }
-
 }
 
 /*
@@ -574,6 +650,7 @@ void init()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glMatrixMode(GL_PROJECTION);
+    gluOrtho2D(-1.0, 1.0, -1.0, 1.0);
     glLoadIdentity();
     gluPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
     glMatrixMode(GL_MODELVIEW);
@@ -592,6 +669,9 @@ void menu(int option)
         currentScene = 2; // Pindah ke Scene 2
         break;
     case 3:
+        currentScene = 3; // Pindah ke Scene 3
+        break;
+    case 4:
         exit(0); // Keluar
     }
     glutPostRedisplay();
@@ -616,7 +696,8 @@ int main(int argc, char **argv)
     glutCreateMenu(menu);
     glutAddMenuEntry("Scene 1", 1);
     glutAddMenuEntry("Scene 2", 2);
-    glutAddMenuEntry("Keluar", 3);
+    glutAddMenuEntry("Scene 3", 3);
+    glutAddMenuEntry("Keluar", 4);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 
     init();
