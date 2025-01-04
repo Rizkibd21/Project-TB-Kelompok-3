@@ -1,7 +1,6 @@
 /*
 ||================================================================  Library  ==========================================================================||
 */
-
 #include <GL/glut.h>
 #include <math.h>
 #include <cstdlib>
@@ -459,15 +458,14 @@ void malam(){
 
 	
     // Update waktu transisi
-    transitionTime -= 0.01f; // Atur kecepatan transisi
+    transitionTime -= 0.007f; // Atur kecepatan transisi
     if (transitionTime < 0.0f) transitionTime = 0.0f; // Batas minimum
 
     // Mengatur warna latar belakang (gradasi)
-    glClearColor(0.1f * transitionTime, 0.1f * transitionTime, 0.3f * transitionTime, 0.0f);
+    glClearColor(2.2f * transitionTime, 0.7f * transitionTime, 0.4f * transitionTime, -3.0f);
 
     // Mengatur cahaya
     GLfloat light_position[] = {0.0, 20.0 * transitionTime, -15.0, 1.0}; // Sesuaikan posisi cahaya
-	
 	GLfloat light_ambient[] = {0.1, 0.1, 0.1, 1.0};
 	GLfloat light_diffuse[] = {1.0, 0.7, 2.0, 0.5};
 	GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
@@ -506,8 +504,6 @@ void malam(){
 
     // Generate trees at pre-determined positions
     generateTrees();
-
-    // drawRandomTrees();
 
     glPushMatrix();
     glRotatef(cloudRotationAngle, 0.0f, 1.0f, 0.0f); // Rotasi awan
