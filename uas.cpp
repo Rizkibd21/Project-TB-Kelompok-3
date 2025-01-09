@@ -7,12 +7,6 @@
 using namespace std;
 
 /*
-||================================================================  Prototype Function  ===============================================================||
-*/
-void drawSun(); // Declaration of the sun drawing function
-void siang();
-
-/*
 ||================================================================  Global Scobe Variabel  ============================================================||
 */
 
@@ -20,7 +14,7 @@ int currentScene = 1; // Default scene
 // Variabel untuk jumlah pohon dan awan
 int numTrees = 150;
 int numClouds = 12;
-int numStars = 200;          // Jumlah bintang
+int numStars = 200; // Jumlah bintang
 
 // Arrays untuk menyimpan posisi pohon dan awan
 float treePositions[100][3];  // Array untuk posisi pohon
@@ -35,6 +29,7 @@ float sunRotationAngle = 0.0f; // Variabel untuk sudut rotasi matahari
 float transitionTime = 0.0f; // Variabel untuk mengatur waktu transisi
 float moonRotationAngle = 0.0f; // Variabel untuk sudut rotasi bulan
 bool isDay = true; // Untuk menentukan siang atau malam
+bool showCartesian = true;
 
 GLfloat light_position[] = {0.0, 20.0, -15.0, 1.0};
 GLfloat light_ambient[] = {0.1, 0.1, 0.1, 1.0};
@@ -284,7 +279,42 @@ void generateStarPositions() {
 }
 
 /*
-||================================================================  Fungsi Scene 2D (Fetra)  ==================================================================||
+||================================================================  Fungsi Cartesian (Rizki)  ==================================================================||
+*/
+void drawCartesian()
+{
+    if (!showCartesian)
+        return;
+
+    glPushMatrix();
+    glLineWidth(2.0f);
+
+    // Gambar sumbu X
+    glColor3f(1.0f, 1.0f, 1.0f); // Merah untuk X
+    glBegin(GL_LINES);
+    glVertex3f(-50.0f, 0.0f, 0.0f);
+    glVertex3f(50.0f, 0.0f, 0.0f);
+    glEnd();
+
+    // Gambar sumbu Y
+    glColor3f(1.0f, 1.0f, 1.0f); // Hijau untuk Y
+    glBegin(GL_LINES);
+    glVertex3f(0.0f, -50.0f, 0.0f);
+    glVertex3f(0.0f, 50.0f, 0.0f);
+    glEnd();
+
+    // Gambar sumbu Z
+    glColor3f(1.0f, 1.0f, 1.0f); // Biru untuk Z
+    glBegin(GL_LINES);
+    glVertex3f(0.0f, 0.0f, -50.0f);
+    glVertex3f(0.0f, 0.0f, 50.0f);
+    glEnd();
+
+    glPopMatrix();
+}
+
+/*
+||================================================================  Fungsi Scene 2D (Sulthan)  ==================================================================||
 */
 void scene1() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -408,6 +438,9 @@ void siang(){
     gluLookAt(camX, camY, camZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
     drawGround();
+    
+    // Gambar sumbu kartesius
+    drawCartesian();
 
     glPushMatrix();
 	glScalef(scaleFactor, scaleFactor, scaleFactor); // Terapkan skala di malam hari
@@ -488,6 +521,9 @@ void malam(){
     gluLookAt(camX, camY, camZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
     drawGround();
+    
+    // Gambar sumbu kartesius
+    drawCartesian();
 
     glPushMatrix();
     glScalef(scaleFactor, scaleFactor, scaleFactor); // Terapkan skala di malam hari
@@ -571,8 +607,15 @@ void keyboard(unsigned char key, int x, int y)
         if (scaleFactor < 0.1f)
             scaleFactor = 0.1f; // Minimum skala
         break;
-    }
-    glutPostRedisplay();
+	case 'c': // Toggle Cartesian plane
+        showCartesian = !showCartesian;
+        break;
+        
+    case 27: // Escape key
+        exit(0);
+        break;
+    }    
+	glutPostRedisplay();
 }
 
 /*
@@ -632,28 +675,8 @@ void display()
 }
 
 /*
-||================================================================  Fungsi Lainnya   ================================================================================||
+||================================================================  Fungsi Menu GUI (Fetra)   ================================================================================||
 */
-void idle()
-{
-    glutPostRedisplay(); // Memanggil redisplay untuk animasi
-}
-
-void init()
-{
-    glEnable(GL_DEPTH_TEST);
-    glClearColor(0.5f, 0.5f, 1.0f, 0.0f); // Correct clear color
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glMatrixMode(GL_PROJECTION);
-    gluOrtho2D(-1.0, 1.0, -1.0, 1.0);
-    glLoadIdentity();
-    gluPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
-    glMatrixMode(GL_MODELVIEW);
-}
-
-
-
 void menu(int option)
 {
     switch (option)
@@ -673,6 +696,29 @@ void menu(int option)
     glutPostRedisplay();
 }
 
+/*
+||================================================================  Fungsi Init (Sulthan)   ================================================================================||
+*/
+void init()
+{
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.5f, 0.5f, 1.0f, 0.0f); // Correct clear color
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glMatrixMode(GL_PROJECTION);
+    gluOrtho2D(-1.0, 1.0, -1.0, 1.0);
+    glLoadIdentity();
+    gluPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+/*
+||================================================================  Fungsi Lainnya   ================================================================================||
+*/
+void idle()
+{
+    glutPostRedisplay(); // Memanggil redisplay untuk animasi
+}
 
 int main(int argc, char **argv)
 {
