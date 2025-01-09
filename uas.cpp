@@ -11,8 +11,7 @@ using namespace std;
 */
 
 int currentScene = 1; // Default scene
-// Variabel untuk jumlah pohon dan awan
-int numTrees = 150;
+int numTrees = 90;
 int numClouds = 12;
 int numStars = 200; // Jumlah bintang
 
@@ -46,6 +45,7 @@ void drawCubes(int rows, int cols, float height, float offsetX, float offsetZ)
         for (int j = 0; j < cols; j++)
         {
             glPushMatrix();
+            glLineWidth(2.0f);
             glTranslatef(j * 1.0f + offsetX, height, i * 1.0f + offsetZ);
             glColor3ub(243, 158, 96);
             glutSolidCube(1.0f);
@@ -70,25 +70,20 @@ void drawGround()
     glPopMatrix();
 }
 
-
-
 /*
 ||================================================================  Fungsi Objek Bulan (Sulthan)  =================================================================||
 */
 void drawMoon()
 {
     glPushMatrix();
-    
-    // Mengatur posisi bulan berdasarkan sudut rotasi
-    float moonY = 35.0f * sin(moonRotationAngle * M_PI / 180.0f); // Posisi Y bulan
-    float moonZ = 35.0f * cos(moonRotationAngle * M_PI / 180.0f); // Posisi Z bulan
-    glTranslatef(0.0f, moonY, moonZ); // Pindahkan bulan ke posisi baru
-
-    glColor3f(0.7f, 0.7f, 0.7f); // Warna putih untuk bulan
-     glScalef(0.5f, 0.5f, 0.5f);        // Perkecil ukuran matahari
-    glutSolidSphere(6.5f, 20, 20); // Gambar bulan sebagai bola padat
+    glColor3f(1.0f, 1.0f, 1.0f);       // Warna putih untuk bulan
+    glRotatef(moonRotationAngle, 1.0f, 0.0f, 0.0f); // Rotasi bulan di sumbu X
+    glTranslatef(0.0f, 20.0f, -15.0f); // Posisi di atas scene
+    glScalef(0.5f, 0.5f, 0.5f);        // Perkecil ukuran bulan
+    glutSolidSphere(6.5f, 20, 20);     // Gambar bulan sebagai bola padat
     glPopMatrix();
 }
+
 /*
 ||================================================================  Fungsi Objek Awan (Sulthan)  ==================================================================||
 */
@@ -138,7 +133,6 @@ void generateClouds()
     }
 }
 
-
 /*
 ||================================================================  Fungsi Objek Matahari (Fetra)  ==============================================================||
 */
@@ -147,18 +141,18 @@ void drawSun()
     glPushMatrix();
     glColor3f(1.0f, 1.0f, 0.0f);       // Warna kuning untuk matahari
     glRotatef(sunRotationAngle, 1.0f, 0.0f, 0.0f); // Rotasi matahari di sumbu X
-    glTranslatef(0.0f, 30.0f, -25.0f); // Posisi di atas scene
+    glTranslatef(0.0f, 20.0f, -15.0f); // Posisi di atas scene
     glScalef(0.5f, 0.5f, 0.5f);        // Perkecil ukuran matahari
     glutSolidSphere(6.5f, 20, 20);     // Gambar matahari sebagai bola padat
     glPopMatrix();
 }
+
 /*
 ||================================================================  Fungsi Objek Pohon (Fetra)  =================================================================||
 */
 	void drawTree()
 {
     // Draw the tree trunk
-    // glTranslatef(x, y, z);
     glPushMatrix();
     glRotated(-90, 1.0, 0.0, 0.0);
     glColor3f(0.5f, 0.35f, 0.05f);
@@ -227,7 +221,6 @@ void generateTreePositions()
     }
 }
 
-
 // Fungsi untuk menggambar pohon pada posisi yang sudah disimpan
 void generateTrees()
 {
@@ -283,7 +276,7 @@ void generateStarPositions() {
 */
 void drawCartesian()
 {
-    if (!showCartesian)
+    if (showCartesian)
         return;
 
     glPushMatrix();
@@ -400,7 +393,6 @@ void scene1() {
     glutSwapBuffers();
 }
 
-
 /*
 ||================================================================  Fungsi Scene Siang (Fetra)  ==================================================================||
 */
@@ -412,11 +404,8 @@ void siang(){
     transitionTime += 0.01f; // Atur kecepatan transisi
     if (transitionTime > 1.0f) transitionTime = 1.0f; // Batas maksimum
 
-    // Mengatur warna latar belakang (gradasi)
-    glClearColor(0.5f * (1 - transitionTime), 0.5f * (1 - transitionTime), 1.0f * (1 - transitionTime), 0.0f);
-
     // Mengatur cahaya
-    GLfloat light_position[] = {0.0, 20.0 - (20.0 * transitionTime), -15.0, 1.0}; // Sesuaikan posisi cahaya
+    GLfloat light_position[] = {0.0, 20.0, -15.0, 1.0}; // Sesuaikan posisi cahaya
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     
     sunRotationAngle -= -0.1f; // Kurangi sudut rotasi untuk muter ke bawah
@@ -469,8 +458,6 @@ void siang(){
     if (cloudRotationAngle >= 360.0f)
         cloudRotationAngle -= 360.0f;
         
-    
-
     // Draw the sun
     drawSun();
 	glClearColor(0.5f, 0.5f, 1.0f, 0.0f); // Correct clear color
@@ -485,9 +472,9 @@ void siang(){
 */
 void malam(){
 	 // Update sudut rotasi bulan
-    moonRotationAngle += -0.1f; // Ubah kecepatan rotasi sesuai kebutuhan
-    if (moonRotationAngle >= 360.0f) 
-		moonRotationAngle -= 360.0f;
+    moonRotationAngle -= -0.1f; // Kurangi sudut rotasi untuk muter ke bawah
+    if (moonRotationAngle < 1.0f) // Reset jika kurang dari 0
+        moonRotationAngle += -360.0f;
 
 	
     // Update waktu transisi
@@ -553,7 +540,6 @@ void malam(){
     // Draw the sun
     drawMoon();
 	
-	glClearColor(0.1f, 0.1f, 0.3f, 0.0f); // Correct clear color
     // Generate clouds at pre-determined positions
 	
 	drawStars();
@@ -703,13 +689,6 @@ void init()
 {
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.5f, 0.5f, 1.0f, 0.0f); // Correct clear color
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glMatrixMode(GL_PROJECTION);
-    gluOrtho2D(-1.0, 1.0, -1.0, 1.0);
-    glLoadIdentity();
-    gluPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
-    glMatrixMode(GL_MODELVIEW);
 }
 
 /*
@@ -727,8 +706,9 @@ int main(int argc, char **argv)
     glutInitWindowSize(800, 600);
     glutCreateWindow("tb kelompok 3");
 
-    numTrees = 100;  // Jumlah pohon
-    numClouds = 15; // Jumlah awan
+	int numTrees = 90;
+	int numClouds = 12;
+	int numStars = 200; // Jumlah bintang
 
     generateTreePositions();
     generateCloudPositions();
