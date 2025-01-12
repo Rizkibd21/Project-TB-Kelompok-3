@@ -134,6 +134,38 @@ void generateClouds()
 }
 
 /*
+||================================================================  Fungsi Star (Sulthan)  ========================================================================||
+*/
+
+void drawStars() {
+    glPushMatrix();
+    glPointSize(2.0f); // Ukuran bintang
+    glBegin(GL_POINTS);
+    glColor3f(1.0f, 1.0f, 1.0f); // Warna bintang (putih)
+
+    for (int i = 0; i < numStars; i++) {
+        glVertex3f(starPositions[i][0], starPositions[i][1], starPositions[i][2]);
+    }
+
+    glEnd();
+    glPopMatrix();
+}
+
+
+void generateStarPositions() {
+    for (int i = 0; i < numStars; i++) {
+        // X: Lebih luas (-50.0 hingga 50.0)
+        starPositions[i][0] = (rand() % 100 - 50) / 1.0f; 
+
+        // Y: Tinggi di langit (20.0 hingga 50.0)
+        starPositions[i][1] = (rand() % 30 + 10) / 1.0f;  
+
+        // Z: Lebih luas (-50.0 hingga 50.0)
+        starPositions[i][2] = (rand() % 100 - 50) / 1.0f;
+    }
+}
+
+/*
 ||================================================================  Fungsi Objek Matahari (Fetra)  ==============================================================||
 */
 void drawSun()
@@ -239,37 +271,6 @@ void generateTrees()
     }
 }
 
-/*
-||================================================================  Fungsi Star (Rizki)  ========================================================================||
-*/
-
-void drawStars() {
-    glPushMatrix();
-    glPointSize(2.0f); // Ukuran bintang
-    glBegin(GL_POINTS);
-    glColor3f(1.0f, 1.0f, 1.0f); // Warna bintang (putih)
-
-    for (int i = 0; i < numStars; i++) {
-        glVertex3f(starPositions[i][0], starPositions[i][1], starPositions[i][2]);
-    }
-
-    glEnd();
-    glPopMatrix();
-}
-
-
-void generateStarPositions() {
-    for (int i = 0; i < numStars; i++) {
-        // X: Lebih luas (-50.0 hingga 50.0)
-        starPositions[i][0] = (rand() % 100 - 50) / 1.0f; 
-
-        // Y: Tinggi di langit (20.0 hingga 50.0)
-        starPositions[i][1] = (rand() % 30 + 10) / 1.0f;  
-
-        // Z: Lebih luas (-50.0 hingga 50.0)
-        starPositions[i][2] = (rand() % 100 - 50) / 1.0f;
-    }
-}
 
 /*
 ||================================================================  Fungsi Cartesian (Rizki)  ==================================================================||
@@ -683,7 +684,7 @@ void menu(int option)
 }
 
 /*
-||================================================================  Fungsi Init (Sulthan)   ================================================================================||
+||================================================================  Fungsi Init   ============================================================================================||
 */
 void init()
 {
@@ -692,7 +693,7 @@ void init()
 }
 
 /*
-||================================================================  Fungsi Lainnya   ================================================================================||
+||====================================================================  Fungsi Lainnya    =====================================================================================||
 */
 void idle()
 {
